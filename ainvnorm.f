@@ -16,6 +16,18 @@ c.....................................................................
       include 'comm.h'
 CMPIINSERT_INCLUDE
 
+C[Codex] When tandem.eq.enabled and no electron general species,
+C        the program set me = 0 and use mi/me*me to calculate mi.
+      if (tandem.eq."enabled" .and. kelecg.le.0) then
+CMPIINSERT_IF_RANK_EQ_0
+        WRITE(*,*)
+        WRITE(*,*)' WARNING/ainvnorm: tandem=enabled requires'
+        WRITE(*,*)'  a general electron species (kelecg>0).'
+        WRITE(*,*)'  Resetting tandem to "disabled".'
+        WRITE(*,*)
+CMPIINSERT_ENDIF_RANK
+        tandem="disabled"
+      endif
 
       if (tandem.eq."enabled") then
         xfac=-1.

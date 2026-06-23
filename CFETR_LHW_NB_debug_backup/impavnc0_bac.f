@@ -239,7 +239,7 @@ c     If ierr=-2 or -3 ('reduce lfil or increase iwk_ilu'), increase the floor v
 c     For jx=500,iy=240,lz=128,lrz=50 with lfil=30: needed iwk_ilu ~ icsrip*61 ~ 305e6.
 c     alu(400e6)+jlu(400e6)=4.8GB. Total ~7.5GB/rank. Must fit in available RAM/mpisize.
 c     If ierr=-2 or -3 persists, reduce lfil (cqlinput) instead of raising this value.
-      iwk_ilu=max(icsrijc*5, 100000000)
+      iwk_ilu=max(icsrijc*5, 400000000)
 
 c     Allocate it3d related storage [No-op for soln_method='direct']
 
@@ -2766,4 +2766,3 @@ c              itl (or itu)case:
 
 
 c      end of file impavnc0.f
-

@@ -433,7 +433,7 @@ c.......................................................................
      1  secondd(lrza),itab(3),tab(3)
 
       do jj = 1,npts_in-1
-        do ll = 0,npts
+        do ll = 1,npts+1
           if (ynewx(ll).ge.oldx(jj) .and. ynewx(ll).le.oldx(jj+1)) then
             ynewf(ll) = 
      .        oldf(jj)+(oldf(jj+1)-oldf(jj))/(oldx(jj+1)-oldx(jj))*
@@ -1029,3 +1029,4 @@ c......................................................................
       return
 
       end function difus_io_scale
+

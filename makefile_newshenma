@@ -30,7 +30,7 @@ ifeq ($(os),Linux)
 
 	PGPLOT_HOME ?= $(or $(PGPLOT_DIR),$(EBROOTPGPLOT))
     
-    # 路径验证
+    # Path validation
     ifeq ($(NETCDF_C_HOME),)
     	$(error netCDF C library not found. Check if nc-config is in PATH)
     endif
@@ -41,25 +41,27 @@ ifeq ($(os),Linux)
 		$(error pgplot library not found)
 	endif
     
-    # 调试信息
+    # Debug information
     $(info netCDF C home: $(NETCDF_C_HOME))
     $(info netCDF Fortran home: $(NETCDF_FORTRAN_HOME))
     $(info pgplot home: $(PGPLOT_HOME))
     
-    # 编译器设置 - 检测可用的 MPI 编译器
+    # Compiler settings - detect available MPI compiler
     ifeq ($(shell which mpiifort >/dev/null 2>&1; echo $$?),0)
         COMPILER := ifort
+	MPICOMPILER := mpiifort
     else ifeq ($(shell which mpif90 >/dev/null 2>&1; echo $$?),0)
         COMPILER := gfortran
+	MPICOMPILER := mpif90
     else
         $(error No compatible MPI compiler found! Install Intel MPI or OpenMPI)
     endif
 
-    # 检测X11库是否存在
-	HAVE_X11 := $(shell ldconfig -p | grep -q libX11.so && echo yes)
+    # Check if X11 library exists
+	HAVE_X11 := $(shell find /usr -name 'libX11.so*' 2>/dev/null | head -1 | xargs test -f && echo yes)
 
-    # 包含路径
-	LOCATION := -L/user/lib64 -L$(PGPLOT_HOME) -L$(NETCDF_C_HOME)/lib -L$(NETCDF_FORTRAN_HOME)/lib
+    # Include paths
+	LOCATION := -L/user/lib64 -L/user/lib -L$(PGPLOT_HOME) -L$(NETCDF_C_HOME)/lib -L$(NETCDF_FORTRAN_HOME)/lib
 	LIBS := $(if $(HAVE_X11), -lX11) -lnetcdff -lnetcdf -lpgplot
 	INCLUDE := -I/usr/include/ -I$(PGPLOT_HOME)/ -I$(NETCDF_C_HOME)/include/ -I$(NETCDF_FORTRAN_HOME)/include/
 endif
@@ -158,15 +160,16 @@ OBJECTS   = $(SOURCES:.f=.o)
 # ###################### End of old settings #######################
 
 #DEBUG     = -g -Mbounds
-DEBUG     = -g 
-OPTIMIZE  = -O -fno-align-commons
+#DEBUG     = -g
+OPTIMIZE  = -O2 -fno-align-commons
+DIM_FIX_FLAGS := -fallow-argument-mismatch
 LISTING   = -Mlist
 CSPECIAL  = -Wno-padded
 #SPECIAL   = -byteswapio -Mbackslash
 LDSPECIAL = -Wl,-noinhibit-exec 
-#COMPILE   = mpif77 -c $(CSPECIAL) -c $(DEBUG) $(INCLUDE) # or use $(OPTIMIZE)
-COMPILE   = mpif77 -c $(CSPECIAL) $(OPTIMIZE) $(INCLUDE) # or use $(DEBUG)
-LOAD      = mpif77 -o $(NAME) $(LDSPECIAL) # Remove -m for optimize
+#COMPILE   = $(MPICOMPILER) -c $(CSPECIAL) -c $(DEBUG) $(INCLUDE) # or use $(OPTIMIZE)
+COMPILE   = $(MPICOMPILER) -c $(CSPECIAL) $(OPTIMIZE) $(DIM_FIX_FLAGS) $(INCLUDE) # or use $(DEBUG)
+LOAD      = $(MPICOMPILER) -o $(NAME) $(LDSPECIAL) # Remove -m for optimize
 PROTECT   = chmod 755
 DELETE    = rm -f
 
@@ -194,7 +197,7 @@ $(SOURCES):        $(INCLUDES)
 #Changes introduced by JCW so obtain saved copy of mpi modified sources
 #	mpi/doparallel.py $< mpitmp.f mpi/mpins_par.f
 #	$(COMPILE) mpitmp.f -o $@
-	python mpi/doparallel.py $< $*_mpitmp.f mpi/mpins_par.f
+	python2 mpi/doparallel.py $< $*_mpitmp.f mpi/mpins_par.f
 	$(COMPILE) $*_mpitmp.f -o $@
 
 rebuild:
@@ -203,4 +206,5 @@ rebuild:
 
 clean:
 	$(DELETE)  $(OBJECTS) *.lst *_mpitmp.f
+
 
